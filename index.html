@@ -162,6 +162,16 @@
   <script>
     let chart;
 
+    function sendHeightToParent() {
+      if (window.parent !== window) {
+        const height = document.body.scrollHeight;
+        window.parent.postMessage({ iframeHeight: height }, '*');
+      }
+    }
+
+    window.addEventListener('load', sendHeightToParent);
+    window.addEventListener('resize', sendHeightToParent);
+
     function calculateAll() {
       const [multEBITDA, multRevenue] = document.getElementById("industry").value.split(',').map(Number);
       const ebitda = parseFloat(document.getElementById("ebitda").value) || 0;
@@ -247,9 +257,7 @@
         }
       });
 
-      if (window.parent !== window) {
-        window.parent.postMessage({ iframeHeight: document.body.scrollHeight }, '*');
-      }
+      sendHeightToParent();
     }
   </script>
 </body>
