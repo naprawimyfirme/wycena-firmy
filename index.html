@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kalkulator wyceny firmy</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+      margin: 0;
+      padding: 0;
+    }
+    section {
+      padding: 40px 0;
+    }
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 15px;
+    }
+    .calculator-form {
+      background-color: #f0f0f0;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    .calculator-form .form-group {
+      margin-bottom: 20px;
+    }
+    .calculator-form label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    .calculator-form input,
+    .calculator-form select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .btn {
+      background-color: #8e42ff;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .btn:hover {
+      background-color: #5e2cb2;
+    }
+    .results {
+      background-color: #ffffff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 30px;
+    }
+    .results h2 {
+      color: #333;
+    }
+    .results p {
+      margin: 10px 0;
+      font-size: 1.1rem;
+    }
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    .comparison-table th,
+    .comparison-table td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+    .comparison-table th {
+      background-color: #8e42ff;
+      color: white;
+    }
+    .comparison-table tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+  </style>
+</head>
+<body>
+  <section>
+    <div class="container">
+      <h1>Kalkulator wyceny firmy</h1>
+      <p>Wprowadź dane finansowe, aby poznać szacunkową wartość swojej firmy przy użyciu różnych metod.</p>
+      <form class="calculator-form" id="valuationForm">
+        <div class="form-group">
+          <label for="industry">Branża</label>
+          <select id="industry">
+            <option value="3.0,1.0">Usługi (EBITDA x3 / Przychód x1)</option>
+            <option value="4.0,1.5">Produkcja (EBITDA x4 / Przychód x1.5)</option>
+            <option value="8.0,2.5">IT / Tech (EBITDA x8 / Przychód x2.5)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="ebitda">EBITDA (zysk operacyjny roczny) [PLN]</label>
+          <input type="number" id="ebitda">
+        </div>
+        <div class="form-group">
+          <label for="revenue">Przychód roczny [PLN]</label>
+          <input type="number" id="revenue">
+        </div>
+        <div class="form-group">
+          <label>Prognozowane przepływy pieniężne (5 lat):</label>
+          <input type="number" id="cf1" placeholder="Rok 1">
+          <input type="number" id="cf2" placeholder="Rok 2">
+          <input type="number" id="cf3" placeholder="Rok 3">
+          <input type="number" id="cf4" placeholder="Rok 4">
+          <input type="number" id="cf5" placeholder="Rok 5">
+        </div>
+        <div class="form-group">
+          <label for="discount">Stopa dyskontowa (%)</label>
+          <input type="number" id="discount" value="10">
+        </div>
+        <div class="form-group">
+          <label for="terminal">Wartość końcowa (opcjonalnie) [PLN]</label>
+          <input type="number" id="terminal">
+        </div>
+        <div class="form-group">
+          <label for="assets">Aktywa trwałe [PLN]</label>
+          <input type="number" id="assets">
+        </div>
+        <div class="form-group">
+          <label for="current">Aktywa obrotowe [PLN]</label>
+          <input type="number" id="current">
+        </div>
+        <div class="form-group">
+          <label for="intangibles">Aktywa niematerialne [PLN]</label>
+          <input type="number" id="intangibles">
+        </div>
+        <div class="form-group">
+          <label for="liabilities">Zobowiązania [PLN]</label>
+          <input type="number" id="liabilities">
+        </div>
+        <button type="button" class="btn" onclick="calculateAll()">Oblicz wycenę</button>
+      </form>
+      <div class="results" id="results"></div>
+    </div>
+  </section>
+  <script>
+    function calculateAll() {
+      const [multEBITDA, multRevenue] = document.getElementById("industry").value.split(',').map(Number);
+      const ebitda = parseFloat(document.getElementById("ebitda").value) || 0;
+      const revenue = parseFloat(document.getElementById("revenue").value) || 0;
+
+      const cf = ["cf1", "cf2", "cf3", "cf4", "cf5"].map(id => parseFloat(document.getElementById(id).value) || 0);
+      const discountRate = (parseFloat(document.getElementById("discount").value) || 10) / 100;
+      const terminal = parseFloat(document.getElementById("terminal").value);
+      const terminalValue = !isNaN(terminal) ? terminal : cf[4] * 5;
+
+      const assets = parseFloat(document.getElementById("assets").value) || 0;
+      const current = parseFloat(document.getElementById("current").value) || 0;
+      const intangibles = parseFloat(document.getElementById("intangibles").value) || 0;
+      const liabilities = parseFloat(document.getElementById("liabilities").value) || 0;
+
+      const valuationEBITDA = ebitda * multEBITDA;
+      const valuationRevenue = revenue * multRevenue;
+
+      let valuationDCF = 0;
+      cf.forEach((cash, i) => {
+        valuationDCF += cash / Math.pow(1 + discountRate, i + 1);
+      });
+      valuationDCF += terminalValue / Math.pow(1 + discountRate, 5);
+
+      const valuationAssets = assets + current + intangibles - liabilities;
+
+      document.getElementById("results").innerHTML = `
+        <h2>Porównanie metod wyceny</h2>
+        <table class="comparison-table">
+          <tr>
+            <th>Metoda</th>
+            <th>Wycena [PLN]</th>
+            <th>Opis</th>
+          </tr>
+          <tr>
+            <td>EBITDA × mnożnik</td>
+            <td>${valuationEBITDA.toLocaleString('pl-PL')}</td>
+            <td>Najprostsza i najczęściej stosowana wycena operacyjna</td>
+          </tr>
+          <tr>
+            <td>Przychód × mnożnik</td>
+            <td>${valuationRevenue.toLocaleString('pl-PL')}</td>
+            <td>Stosowana dla firm we wczesnej fazie wzrostu</td>
+          </tr>
+          <tr>
+            <td>DCF (zdyskontowane przepływy)</td>
+            <td>${valuationDCF.toLocaleString('pl-PL')}</td>
+            <td>Zaawansowana, precyzyjna wycena przyszłych dochodów</td>
+          </tr>
+          <tr>
+            <td>Majątkowa</td>
+            <td>${valuationAssets.toLocaleString('pl-PL')}</td>
+            <td>Oparta na aktywach netto firmy</td>
+          </tr>
+        </table>
+      `;
+
+      // dopasowanie wysokości iframe jeśli potrzebne
+      if (window.parent !== window) {
+        window.parent.postMessage({ iframeHeight: document.body.scrollHeight }, '*');
+      }
+    }
+  </script>
+</body>
+</html>
