@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kalkulator wyceny firmy</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -84,6 +85,15 @@
     .comparison-table tr:nth-child(even) {
       background-color: #f9f9f9;
     }
+    .chart-container {
+      margin-top: 40px;
+      text-align: center;
+      width: 100%;
+    }
+    canvas {
+      width: 100% !important;
+      height: auto !important;
+    }
   </style>
 </head>
 <body>
@@ -143,9 +153,15 @@
         <button type="button" class="btn" onclick="calculateAll()">Oblicz wycenę</button>
       </form>
       <div class="results" id="results"></div>
+      <div class="chart-container">
+        <canvas id="valuationChart"></canvas>
+      </div>
     </div>
   </section>
+
   <script>
+    let chart;
+
     function calculateAll() {
       const [multEBITDA, multRevenue] = document.getElementById("industry").value.split(',').map(Number);
       const ebitda = parseFloat(document.getElementById("ebitda").value) || 0;
@@ -203,7 +219,34 @@
         </table>
       `;
 
-      // dopasowanie wysokości iframe jeśli potrzebne
+      const labels = ['EBITDA', 'Przychód', 'DCF', 'Majątkowa'];
+      const data = [valuationEBITDA, valuationRevenue, valuationDCF, valuationAssets];
+
+      const ctx = document.getElementById('valuationChart').getContext('2d');
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Wartość wyceny (PLN)',
+            data: data,
+            backgroundColor: ['#8e42ff', '#5bc0de', '#5cb85c', '#f0ad4e']
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+
       if (window.parent !== window) {
         window.parent.postMessage({ iframeHeight: document.body.scrollHeight }, '*');
       }
